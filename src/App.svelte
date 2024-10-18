@@ -259,7 +259,7 @@
       messageLog = messageLog.filter((msg) => msg.type !== 'user_sql' &&  msg.type !== 'fix_sql');
 
       // Add the user's SQL to the message lo
-      let id = window.location.hash
+      let id = window.location.hash.replace('#','')
       newApiRequest('update_sql', 'POST', {'sql': sql, 'id': id, 'question': question.question})
               .then(addMessage)
               .then((msg: MessageContents) => {
