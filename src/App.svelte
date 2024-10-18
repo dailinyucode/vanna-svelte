@@ -239,7 +239,8 @@
   function findQuestionSql() {
     let question = messageLog.find((msg) => msg.type === 'user_question');
     if (question && question.type === 'user_question') {
-      let sql = messageLog.find((msg) => msg.type === 'sql');
+      let messageSql = messageLog.filter((msg) => msg.type === 'sql');
+      let sql = messageSql[messageSql.length - 1]
       if (sql && sql.type === 'sql') {
         return { question: question.question, sql: sql.text };
       }
