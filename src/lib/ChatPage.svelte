@@ -16,6 +16,8 @@
     import CodeBlock from "./CodeBlock.svelte";
     import Feedback from "./Feedback.svelte";
     import SqlInput from "./SqlInput.svelte";
+    import DrawInput from "./DrawInput.svelte";
+    import SqlFix from "./SqlFix.svelte"
 
   export let suggestedQuestions: MessageContents | null = null;
   export let messageLog: MessageContents[];
@@ -25,7 +27,11 @@
   export let onUpdateSql: (sql: string) => void;
   export let question_asked: boolean;
   export let marked_correct: boolean | null;
+  export let auto_fix_sql: boolean | null
+  export let redraw_chart: boolean;
   export let thinking: boolean;
+  export let onRedrawChart: (chart_instructions: string) => void
+  export let onAutoFixSql: ()=> void
 
 </script>
 
@@ -38,7 +44,8 @@
       {#if suggestedQuestions && suggestedQuestions.type == 'question_list' && !question_asked}
         <AgentResponse>
           <Text>
-            {suggestedQuestions.header}
+              <Text>{suggestedQuestions.header}</Text>
+              <br/>
             {#each suggestedQuestions.questions as question}
                 <InChatButton message={question} onSubmit={newQuestion} />
             {/each}
@@ -61,7 +68,8 @@
           {:else if message.type === 'question_list'}
               <AgentResponse>
               <Text>
-                  {message.header}
+                  <Text>{message.header}</Text>
+                  <br/>
                   {#each message.questions as question}
                       <InChatButton message={question} onSubmit={newQuestion} />
                   {/each}
@@ -76,21 +84,30 @@
                 <Plotly fig={message.fig} />
               </AgentResponse>
               <AgentResponse>
-                <Text>Were the results correct?</Text>
+                  <InChatButton message="描述你的图" onSubmit={() => redraw_chart = true} />
+              </AgentResponse>
+              <AgentResponse>
+                <Text>结果正确吗?</Text>
                 {#if marked_correct === null}
-                  <InChatButton message="Yes" onSubmit={() => marked_correct = true} />
-                  <InChatButton message="No" onSubmit={() => marked_correct = false} />
+                  <InChatButton message="正确" onSubmit={() => marked_correct = true} />
+                  <InChatButton message="错误" onSubmit={() => marked_correct = false} />
                 {/if}
               </AgentResponse>
               {#if marked_correct === true}
-                <UserMessage message="Yes, the results were correct." />
+                <UserMessage message="成功完成一次查询" />
               {:else if marked_correct === false}
-                <UserMessage message="No, the results were not correct." />
+                <UserMessage message="错误，结果是错误的。" />
               {/if}              
           {:else if message.type === 'error'}
               <AgentResponse>
               <Error message={message.error} />
             </AgentResponse>
+          {:else if message.type === 'sql_error'}
+              <AgentResponse>
+                  <Error message={JSON.stringify(message.error)} />
+                  <InChatButton message="ai自动修正" onSubmit={onAutoFixSql} />
+                  <InChatButton message="手动修正" onSubmit={() => auto_fix_sql = false} />
+              </AgentResponse>
           {:else if message.type === 'question_cache'}
               <UserMessage message={message.question} />
               <AgentResponse>
@@ -107,8 +124,16 @@
                 <Plotly fig={message.fig} />
               </AgentResponse>
           {:else if message.type === 'user_sql'}
-              <UserMessage message="Put your SQL here">
+              <UserMessage message="编写你的sql">
                 <SqlInput onSubmit={onUpdateSql} />
+              </UserMessage>
+          {:else if message.type === 'redraw_chart'}
+              <UserMessage message="编写你的描述">
+                 <DrawInput onSubmit={onRedrawChart} />
+              </UserMessage>
+          {:else if message.type === 'fix_sql'}
+              <UserMessage message="手动修改sql">
+                  <SqlFix old_sql="{message.old_sql}" onSubmit={onUpdateSql} />
               </UserMessage>
           {:else}
               <AgentResponse>
@@ -132,10 +157,10 @@
       <SidebarToggleButton />
   
       {#if question_asked}
-        <GreenButton message="New Question" onSubmit={clearMessages} />
+        <GreenButton message="新问题" onSubmit={clearMessages} />
         {#each messageLog as msg}
           {#if msg.type === 'question_cache'}
-            <GreenButton message="Re-Run SQL" onSubmit={() => msg.type === 'question_cache' ? rerunSql(msg.id) : undefined } />
+            <GreenButton message="重新运行sql" onSubmit={() => msg.type === 'question_cache' ? rerunSql(msg.id) : undefined } />
           {/if}
         {/each}
       {:else}

@@ -13,13 +13,13 @@
   import ArbitraryAgentMessage from './lib/ArbitraryAgentMessage.svelte';
   import SlowReveal from './lib/SlowReveal.svelte';
   import type { ApiData, MessageContents, Method, Page, QuestionLink } from './lib/types.ts';
-    import Thinking from './lib/Thinking.svelte';
-    import Text from './lib/Text.svelte';
-    import DataFrame from './lib/DataFrame.svelte';
-    import Plotly from './lib/Plotly.svelte';
-    import GreenButton from './lib/GreenButton.svelte';
-    import ChatPage from './lib/ChatPage.svelte';
-    import TrainingData from './lib/TrainingData.svelte';
+  import Thinking from './lib/Thinking.svelte';
+  import Text from './lib/Text.svelte';
+  import DataFrame from './lib/DataFrame.svelte';
+  import Plotly from './lib/Plotly.svelte';
+  import GreenButton from './lib/GreenButton.svelte';
+  import ChatPage from './lib/ChatPage.svelte';
+  import TrainingData from './lib/TrainingData.svelte';
 
   let message = 'Loading...';
 
@@ -42,7 +42,8 @@
   let question_asked = false;
   let thinking = false;
   let marked_correct: boolean | null = null;
-
+  let redraw_chart: boolean = false
+  let auto_fix_sql: boolean | null = null;
   let currentPage: Page;
 
   let questionHistory: QuestionLink[] = [];
@@ -196,11 +197,11 @@
           .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
           .join('&');
 
-          response = await fetch(`/api/v0/${endpoint}?${queryString}`);
+          response = await fetch(`${import.meta.env.VITE_API_URL}/api/v0/${endpoint}?${queryString}`);
         } else {
           let jsonArgs = JSON.stringify(args);
 
-          response = await fetch(`/api/v0/${endpoint}`, {
+          response = await fetch(`${import.meta.env.VITE_API_URL}/api/v0/${endpoint}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -251,14 +252,85 @@
     if (question && question.type === 'user_question') {
       let questionSql = { question: question.question, sql: sql };
 
-      newApiRequest('train', 'POST', questionSql);
+      //newApiRequest('train', 'POST', questionSql);
 
       // Remove the user's SQL from the message log
-      messageLog = messageLog.filter((msg) => msg.type !== 'user_sql');
+      messageLog = messageLog.filter((msg) => msg.type !== 'user_sql' &&  msg.type !== 'fix_sql');
 
-      // Add the user's SQL to the message log
-      addMessage({ type: 'sql', text: sql, id: window.location.hash });
+      // Add the user's SQL to the message lo
+      let id = window.location.hash
+      newApiRequest('update_sql', 'POST', {'sql': sql, 'id': id, 'question': question.question})
+              .then(addMessage)
+              .then((msg: MessageContents) => {
+                        if (msg.type === 'sql') {
+                          window.location.hash = msg.id;
+                          newApiRequest('run_sql', 'GET', {'id': msg.id})
+                                  .then(addMessage)
+                                  .then((msg: MessageContents) => {
+                                    if (msg.type === 'df') {
+                                      newApiRequest('generate_plotly_figure', 'GET', {'id': msg.id})
+                                              .then(addMessage)
+                                              .then((msg: MessageContents) => {
+                                                if (msg.type === 'plotly_figure') {
+                                                  newApiRequest('generate_followup_questions', 'GET', {'id': msg.id})
+                                                          .then(addMessage)
+                                                  marked_correct = null
+                                                  auto_fix_sql = null
+                                                }
+                                              })
+                                    }
+                                  })
+                        }
+                      }
+              )
     }
+  }
+
+  function onRedrawChart(chart_instructions: string) {
+    console.log(chart_instructions)
+    messageLog = messageLog.filter((msg) => msg.type !== 'redraw_chart');
+    console.log("------------>", messageLog)
+
+    // 找到最后一个运行sql的id
+    let messageSql = messageLog.filter((msg) => msg.type === 'sql');
+    let id = messageSql[messageSql.length-1]?.id
+    newApiRequest('generate_plotly_figure', 'GET', {'id': id, 'chart_instructions': chart_instructions})
+            .then(addMessage)
+            .then(() => {
+              redraw_chart = false
+            })
+  }
+
+  function onAutoFixSql() {
+    let messageSql = messageLog.filter((msg) => msg.type === 'sql');
+    let id = messageSql[messageSql.length-1]?.id
+
+    let messageError = messageLog.filter((msg) => msg.type === 'error' || msg.type === 'sql_error');
+    let error = messageError[messageError.length-1]?.error
+    newApiRequest('fix_sql', 'POST', {id: id, error: error})
+            .then(addMessage)
+            .then((msg: MessageContents) => {
+                      if (msg.type === 'sql') {
+                        window.location.hash = msg.id;
+                        newApiRequest('run_sql', 'GET', {'id': msg.id})
+                                .then(addMessage)
+                                .then((msg: MessageContents) => {
+                                  if (msg.type === 'df') {
+                                    newApiRequest('generate_plotly_figure', 'GET', {'id': msg.id})
+                                            .then(addMessage)
+                                            .then((msg: MessageContents) => {
+                                              if (msg.type === 'plotly_figure') {
+                                                newApiRequest('generate_followup_questions', 'GET', {'id': msg.id})
+                                                        .then(addMessage)
+                                                marked_correct = null
+                                                auto_fix_sql = null
+                                              }
+                                            })
+                                  }
+                                })
+                      }
+                    }
+            )
   }
 
   $: {
@@ -270,6 +342,15 @@
     } else if (marked_correct === false) {
      addMessage({ type: 'user_sql' });
     }
+
+    if (redraw_chart === true){
+      addMessage({ type: 'redraw_chart' });
+    }
+
+    if (auto_fix_sql === false){
+      let questionSql = findQuestionSql();
+      addMessage({ type: 'fix_sql', old_sql: questionSql? questionSql.sql:''});
+    }
   }
 
 </script>
@@ -279,7 +360,8 @@
 <Sidebar getTrainingData={getTrainingData} newQuestionPage={newQuestionPage} loadQuestionPage={loadQuestionPage} questionHistory={questionHistory} />
 
 {#if currentPage === 'chat'}
-  <ChatPage suggestedQuestions={suggestedQuestions} messageLog={messageLog} newQuestion={newQuestion} rerunSql={rerunSql} clearMessages={clearMessages} onUpdateSql={onUpdateSql} bind:question_asked bind:thinking bind:marked_correct />
+  <ChatPage suggestedQuestions={suggestedQuestions} messageLog={messageLog} newQuestion={newQuestion} rerunSql={rerunSql} clearMessages={clearMessages} onUpdateSql={onUpdateSql}  onRedrawChart="{onRedrawChart}" onAutoFixSql="{onAutoFixSql}" bind:question_asked bind:thinking bind:marked_correct bind:redraw_chart bind:auto_fix_sql
+  />
 {:else if currentPage === 'training-data'}
   <TrainingData trainingData={trainingData} removeTrainingData={removeTrainingData} onTrain={onTrain} />
 {/if}

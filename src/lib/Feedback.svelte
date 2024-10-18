@@ -4,7 +4,7 @@
     export let marked_correct: boolean;
 </script>
 
-<Text>Were the results correct?</Text>
+<Text>结果正确吗?</Text>
 
 <div class="flex items-center">
     <span class="text-sm text-gray-500 mr-3 dark:text-gray-400">Incorrect</span>

@@ -9,7 +9,7 @@
     onMount(async () => {
       try {
         apiStatus = { status: 'Loading' };
-        const response = await fetch(`/api/v1/${endpoint}?question=${question}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/${endpoint}?question=${question}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

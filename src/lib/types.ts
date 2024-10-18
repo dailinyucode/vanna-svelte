@@ -16,9 +16,12 @@ export type MessageContents =
     | { type: 'df', df: string, id: string }
     | { type: 'plotly_figure', fig: string, id: string }
     | { type: 'error', error: string }
+    | { type: 'sql_error', error: string }
     | { type: 'question_cache', id: string, question: string, sql: string, df: string, fig: string, followup_questions: string[] }
     | { type: 'question_history', questions: QuestionLink[] }
     | { type: 'user_sql' }
+    | { type: 'redraw_chart'}
+    | { type: 'fix_sql', old_sql: string }
 
 export type Method =
     | 'GET'

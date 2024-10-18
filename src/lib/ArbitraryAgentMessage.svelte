@@ -20,7 +20,7 @@
           .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
           .join('&');
 
-        const response = await fetch(`/api/v1/${endpoint}?${queryString}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/${endpoint}?${queryString}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
