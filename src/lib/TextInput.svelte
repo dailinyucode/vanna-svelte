@@ -16,7 +16,7 @@
 
     <!-- Input -->
     <div class="relative">
-        <input type="text" bind:value={newMessage} on:keydown={handleKeydown} class="p-4 pb-12 block w-full bg-gray-100 border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-800 dark:border-gray-700 dark:text-gray-400" placeholder="Ask me a question about your data that I can turn into SQL.">
+        <input type="text" bind:value={newMessage} on:keydown={handleKeydown} class="p-4 pb-12 block w-full bg-gray-100 border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-800 dark:border-gray-700 dark:text-gray-400" placeholder="向我询问有关您的数据的问题，我可以将其转换为 SQL。">
   
         <!-- Toolbar -->
         <div class="absolute bottom-px inset-x-px p-2 rounded-b-md bg-gray-100 dark:bg-slate-800">
