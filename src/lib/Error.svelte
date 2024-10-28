@@ -10,7 +10,7 @@
       </div>
       <div class="ml-4">
         <h3 class="text-sm text-yellow-800 font-semibold">
-          Error
+          发生错误
         </h3>
         <div class="mt-1 text-sm text-yellow-700">
           {message}
