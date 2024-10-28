@@ -67,13 +67,12 @@ import icon from "../assets/icon.png";
   
       <!-- Footer -->
       <div class="mt-auto">
-        <div class="py-2.5 px-7">
-          <p class="inline-flex items-center gap-x-2 text-xs text-green-600">
-            <span class="block w-1.5 h-1.5 rounded-full bg-green-600"></span>
-            连接中
-          </p>
-        </div>
-  
+<!--        <div class="py-2.5 px-7">-->
+<!--          <p class="inline-flex items-center gap-x-2 text-xs text-green-600">-->
+<!--            <span class="block w-1.5 h-1.5 rounded-full bg-green-600"></span>-->
+<!--            连接中-->
+<!--          </p>-->
+<!--        </div>-->
 <!--        <div class="p-4 border-t border-gray-200 dark:border-gray-700">-->
 <!--          <a class="flex justify-between items-center gap-x-3 py-2 px-3 text-sm text-slate-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300" href="#replace">-->
 <!--            退出登入-->
