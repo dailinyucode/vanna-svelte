@@ -72,7 +72,7 @@
                   .then(addMessage)
                   .then((msg: MessageContents) => {
                     if (msg.type === 'plotly_figure') {
-                      questionHistory = [...questionHistory, { question, id: msg.id }]
+                      questionHistory = [{ question, id: msg.id }, ...questionHistory]
                       newApiRequest('generate_followup_questions', 'GET', {'id': msg.id})
                         .then(addMessage)  
                     }
