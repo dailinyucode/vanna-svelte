@@ -152,7 +152,7 @@
     </div>
 
     {#if question_asked}
-        <footer class="max-w-2xl ml-auto sticky bottom-0 z-10 p-3 sm:py-6">
+        <footer class="max-w-md ml-auto sticky bottom-0 z-10 p-3 sm:py-6">
             <SidebarToggleButton />
         <GreenButton message="新问题" onSubmit={clearMessages} />
         {#each messageLog as msg}
