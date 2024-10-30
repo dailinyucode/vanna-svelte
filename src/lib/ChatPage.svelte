@@ -150,24 +150,25 @@
   
       </ul>
     </div>
-  
-    <!-- Search -->
-    <footer class="max-w-4xl mx-auto sticky bottom-0 z-10 p-3 sm:py-6">
-  
-      <SidebarToggleButton />
-  
-      {#if question_asked}
+
+    {#if question_asked}
+        <footer class="max-w-2xl ml-auto sticky bottom-0 z-10 p-3 sm:py-6">
+            <SidebarToggleButton />
         <GreenButton message="新问题" onSubmit={clearMessages} />
         {#each messageLog as msg}
-          {#if msg.type === 'question_cache'}
-            <GreenButton message="重新运行sql" onSubmit={() => msg.type === 'question_cache' ? rerunSql(msg.id) : undefined } />
-          {/if}
+            {#if msg.type === 'question_cache'}
+                <GreenButton message="重新运行sql" onSubmit={() => msg.type === 'question_cache' ? rerunSql(msg.id) : undefined } />
+            {/if}
         {/each}
-      {:else}
+        </footer>
+
+    {:else}
+    <!-- Search -->
+    <footer class="max-w-4xl mx-auto sticky bottom-0 z-10 p-3 sm:py-6">
+      <SidebarToggleButton />
         <TextInput onSubmit={newQuestion} />
-      {/if}
-  
     </footer>
+    {/if}
     <!-- End Search -->
   </div>
   <!-- End Content -->
