@@ -10,6 +10,13 @@
     // Extracting column names dynamically from the first record
     let columns = data.length > 0 ? Object.keys(data[0]) : [];
 
+    let titleMap:{ [key: string]: string } = {
+        id: '操作',
+        question: '问题',
+        content: '内容',
+        training_data_type: '类型'
+    }
+
     let rowsPerPage = 10;
 
     let currentPage = 1;
@@ -108,11 +115,7 @@
                         <th scope="col" class="px-6 py-3 text-left">
                             <div class="flex items-center gap-x-2">
                                 <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                                    {#if column != 'id'}
-                                        {column}
-                                    {:else}
-                                        Action
-                                    {/if}
+                                        {titleMap[column]}
                                 </span>
                             </div>
                         </th>
@@ -127,7 +130,7 @@
                         <td class="h-px w-px ">
                             <div class="px-6 py-3">
                                 {#if column != 'id'}
-                                    <span class="text-gray-800 dark:text-gray-200">{row[column]}</span>
+                                    <div class="text-gray-800 dark:text-gray-200">{row[column] !=null ? row[column]:''}</div>
                                 {:else}
                                     <button type="button" on:click={() => {confirmDelete = row[column]}} class="py-2 px-3 inline-flex justify-center items-center gap-2 rounded-md border-2 border-red-200 font-semibold text-red-500 hover:text-white hover:bg-red-500 hover:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-offset-2 transition-all text-sm dark:focus:ring-offset-gray-800">
                                         删除
